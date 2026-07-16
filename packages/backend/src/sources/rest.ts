@@ -4,7 +4,7 @@ import type { ResponseBoardsList } from "../types/responseBoardsList";
 import type { ResponsePost, ResponseThreadsList } from "../types/responseThreadsList";
 import type { ResponseThreadPostsList } from "../types/responseThreadPostsList";
 import type { ResponseEventsList } from "../types/responseEventsList";
-import { fetchEntitiesFromApiBaseLimit } from "../utils/config";
+import { fetchEntitiesFromApiBaseLimit, ignoredBoardTags } from "../utils/config";
 import type { SyncSource } from "./types";
 
 export type CreateRestSourceParams = {
@@ -25,6 +25,10 @@ export const createRestSource = (params: CreateRestSourceParams): SyncSource => 
     },
 
     getThreadsList: async ({ tag, offset, limit }) => {
+      if (ignoredBoardTags.includes(tag)) {
+        return [];
+      }
+
       const response = await request.get<ApiTemplate<ResponseThreadsList>>(`/v2/board/${tag}`, {
         params: {
           offset,
@@ -32,6 +36,7 @@ export const createRestSource = (params: CreateRestSourceParams): SyncSource => 
           no_board_list: "true",
         },
       });
+
       return response.data.payload?.posts || [];
     },
 

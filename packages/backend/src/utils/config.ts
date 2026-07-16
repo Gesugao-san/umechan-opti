@@ -20,3 +20,9 @@ export const kafkaConsumerGroupId = process.env.KAFKA_CONSUMER_GROUP_ID || 'umec
 export const kafkaTopics = (process.env.KAFKA_TOPICS || 'chan.boards,chan.posts,chan.files,chan.passports').split(',').map((t) => t.trim()).filter(Boolean);
 /** If true, read from earliest offset (for replay/debug). Default false = only new messages. */
 export const kafkaFromBeginning = process.env.KAFKA_READ_FROM_BEGINNING === 'true' || process.env.KAFKA_READ_FROM_BEGINNING === '1';
+
+/** Запрещенные тэги досок (через запятую) */
+export const bannedBoardTags = process.env.BANNED_BOARD_TAGS ? process.env.BANNED_BOARD_TAGS.split(',').map((t) => t.trim()).filter(Boolean) : [];
+
+/** Игнорируемые при full sync тэги досок */
+export const ignoredBoardTags = process.env.IGNORED_BOARD_TAGS ? process.env.IGNORED_BOARD_TAGS.split(',').map((t) => t.trim()).filter(Boolean) : [];

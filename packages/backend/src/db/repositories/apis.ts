@@ -1,9 +1,7 @@
-import { defaultLimit, defaultThreadSize } from "../../utils/config";
+import { defaultLimit, defaultThreadSize, bannedBoardTags } from "../../utils/config";
 import { DataSource } from "typeorm";
 import { Board } from "../entities/Board";
 import { Post } from "../entities/Post";
-
-const bannedBoardTags = ['fff', 'uwu', 'hry', 'uly', '//', '///', '/', 'hdn'];
 
 export const dbModelApis = (dataSource: DataSource) => ({
   boards: {
