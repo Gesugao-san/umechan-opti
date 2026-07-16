@@ -29,7 +29,7 @@ export const PostMDContent = memo(function PostMDComponentInner(props: Props) {
 
   return (
     <Box flexDirection='column' justifyContent='flex-start' alignItems='flex-start' gap='var(--post-content-gap)'>
-      <PostContent root={root.children} path="root" isUnmod={props.isUnmod} />
+      <PostContent root={root.children as TxtNode[]} path="root" isUnmod={props.isUnmod} />
     </Box>
   );
 });
@@ -45,7 +45,7 @@ const PostContent = (props: InnerProps) => {
     if (item.type === ASTNodeTypes.Paragraph) {
       return (
         <p key={`${props.path}-${index}-p`}>
-          <PostContent root={(item as TxtParagraphNode).children} path={`${props.path}-${index}-p`} isUnmod={props.isUnmod} />
+          <PostContent root={(item as TxtParagraphNode).children as TxtNode[]} path={`${props.path}-${index}-p`} isUnmod={props.isUnmod} />
         </p>
       );
     }
@@ -63,7 +63,7 @@ const PostContent = (props: InnerProps) => {
       const href = rawUrl.startsWith('http://') || rawUrl.startsWith('https://') ? rawUrl : '#';
       return (
         <Link key={`${props.path}-${index}-link`} href={href} target="_blank" rel="noopener noreferrer">
-          <PostContent root={(item as TxtLinkNode).children} path={`${props.path}-${index}-link`} isUnmod={props.isUnmod} />
+          <PostContent root={(item as TxtLinkNode).children as TxtNode[]} path={`${props.path}-${index}-link`} isUnmod={props.isUnmod} />
         </Link>
       );
     }
@@ -104,12 +104,18 @@ const PostContent = (props: InnerProps) => {
           </PostPointer>
         )
       }
+
+      return (
+        <blockquote key={`${props.path}-${index}-quote`} className={styles.quote}>
+          {contents}
+        </blockquote>
+      );
     }
 
     if (item.type === ASTNodeTypes.Emphasis) {
       return (
         <b key={`${props.path}-${index}-emphasis`}>
-          <PostContent root={(item as TxtLinkNode).children} path={`${props.path}-${index}-emphasis`} isUnmod={props.isUnmod} />
+          <PostContent root={(item as TxtLinkNode).children as TxtNode[]} path={`${props.path}-${index}-emphasis`} isUnmod={props.isUnmod} />
         </b>
       );
     }
@@ -117,7 +123,7 @@ const PostContent = (props: InnerProps) => {
     if (item.type === ASTNodeTypes.Strong) {
       return (
         <i key={`${props.path}-${index}-strong`}>
-          <PostContent root={(item as TxtLinkNode).children} path={`${props.path}-${index}-strong`} isUnmod={props.isUnmod} />
+          <PostContent root={(item as TxtLinkNode).children as TxtNode[]} path={`${props.path}-${index}-strong`} isUnmod={props.isUnmod} />
         </i>
       );
     }
@@ -125,7 +131,7 @@ const PostContent = (props: InnerProps) => {
     if (item.type === ASTNodeTypes.List) {
       return (
         <ul className={styles.ul} key={`${props.path}-${index}-list`}>
-          <PostContent root={(item as TxtListNode).children} path={`${props.path}-${index}-list`} isUnmod={props.isUnmod} />
+          <PostContent root={(item as TxtListNode).children as unknown as TxtNode[]} path={`${props.path}-${index}-list`} isUnmod={props.isUnmod} />
         </ul>
       );
     }
@@ -133,7 +139,7 @@ const PostContent = (props: InnerProps) => {
     if (item.type === ASTNodeTypes.ListItem) {
       return (
         <li className={styles.li} key={`${props.path}-${index}-listitem`}>
-          <PostContent root={(item as TxtListItemNode).children} path={`${props.path}-${index}-listitem`} isUnmod={props.isUnmod} />
+          <PostContent root={(item as TxtListItemNode).children as unknown as TxtNode[]} path={`${props.path}-${index}-listitem`} isUnmod={props.isUnmod} />
         </li>
       );
     }

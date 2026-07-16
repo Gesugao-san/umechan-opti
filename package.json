@@ -17,6 +17,6 @@
     "test": "pnpm --filter epds run test"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.2.4"
   }
 }
