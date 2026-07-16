@@ -12,6 +12,24 @@ export const defaultThreadSize = Number(process.env.DEFAULT_THREAD_SIZE) || 5;
 export const apiDefaultListenPort = Number(process.env.API_DEFAULT_LISTEN_PORT) || 3000;
 export const apiDefaultListenHost = process.env.API_DEFAULT_LISTEN_HOST || '0.0.0.0';
 
+/** Directory for locally stored media files (relative to backend package cwd). */
+export const getMediaDataDir = (): string => process.env.MEDIA_DATA_DIR || "./media-data";
+/** @deprecated use getMediaDataDir() */
+export const mediaDataDir = getMediaDataDir();
+
+/** Public base URL for API responses, e.g. http://localhost:3000/api */
+export const getApiPublicBaseUrl = (): string =>
+  process.env.API_PUBLIC_BASE_URL || `http://localhost:${apiDefaultListenPort}/api`;
+/** @deprecated use getApiPublicBaseUrl() */
+export const apiPublicBaseUrl = getApiPublicBaseUrl();
+
+export const getMediaDownloadTimeoutMs = (): number =>
+  Number(process.env.MEDIA_DOWNLOAD_TIMEOUT_MS) || 30_000;
+export const getMediaDownloadRetryDelayMs = (): number =>
+  Number(process.env.MEDIA_DOWNLOAD_RETRY_DELAY_MS) || 2_000;
+export const getMediaDownloadMaxRetries = (): number =>
+  Number(process.env.MEDIA_DOWNLOAD_MAX_RETRIES) || 5;
+
 /** Kafka consumer (raspredach): bootstrap servers, e.g. "kafka1:9092,kafka2:9092" */
 export const kafkaBootstrapServers = process.env.KAFKA_BOOTSTRAP_SERVERS || '';
 export const kafkaSaslUsername = process.env.KAFKA_SASL_USERNAME || '';

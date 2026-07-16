@@ -20,11 +20,14 @@ services:
       DATABASE_URL: ${BACKEND_DATABASE_URL:-file:./data/dev.db}
       # API_DEFAULT_LISTEN_PORT: ${BACKEND_PORT:-3000}
       API_DEFAULT_LISTEN_HOST: 0.0.0.0
+      MEDIA_DATA_DIR: ./media-data
+      API_PUBLIC_BASE_URL: ${API_PUBLIC_BASE_URL:-http://localhost:3000/api}
       METRICS_PASSWORD: ${METRICS_PASSWORD}
     ports:
       - "${BACKEND_PORT:-3000}:3000"
     volumes:
       - backend_data:/app/packages/backend/data
+      - media_data:/app/packages/backend/media-data
     restart: always
 
   frontend:
@@ -71,4 +74,5 @@ services:
 
 volumes:
   backend_data:
+  media_data:
   mysql_data:

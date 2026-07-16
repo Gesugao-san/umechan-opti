@@ -13,6 +13,12 @@ export class Media {
   @Column({ nullable: true, type: "text" })
   urlPreview!: string | null;
 
+  @Column({ nullable: true, type: "text" })
+  localPath!: string | null;
+
+  @Column({ nullable: true, type: "text" })
+  localPreviewPath!: string | null;
+
   @Column({ type: "text" })
   mediaType!: string;
 

@@ -1,18 +1,8 @@
-import { EpdsPostMediaType } from "@umechan/shared";
-import type { EpdsPostMedia } from "@umechan/shared";
 import { FastifyInstance, FastifyRequest } from "fastify";
 import type { DbConnection } from "../../db/connection";
-import type { Media } from "../../db/entities/Media";
+import { serializeMedia, serializePost, serializePosts } from "../serializers/post";
 
 const CHAT_COOKIE_NAME = "umechan_chat_profile";
-
-const chatImageMediaToEpds = (m: Media): EpdsPostMedia => ({
-  id: m.id,
-  urlOrigin: m.urlOrigin ?? "",
-  urlPreview: m.urlPreview ?? "",
-  mediaType: EpdsPostMediaType.PISSYKAKA_IMAGE,
-  postId: Number(m.postId),
-});
 const identifyRateLimit = new Map<string, number[]>();
 
 const readCookie = (cookieHeader: string | undefined, cookieName: string): string | null => {
@@ -69,7 +59,7 @@ export const bindBoardsRoutes = (fastify: FastifyInstance, db: DbConnection) => 
     );
     const threadsCount = await db.apis.threads.getCountByBoardTag(request.query.unmod !== 'true', request.params.boardTag);
 
-    reply.send({ items: threads, count: threadsCount });
+    reply.send({ items: serializePosts(threads), count: threadsCount });
   });
 
   type ReqThread = FastifyRequest<{ Querystring: { unmod?: string }, Params: { postId: string } }>;
@@ -78,7 +68,7 @@ export const bindBoardsRoutes = (fastify: FastifyInstance, db: DbConnection) => 
       request.query.unmod !== 'true',
       Number(request.params.postId)
     );
-    reply.send({ item: data });
+    reply.send({ item: serializePost(data) });
   });
 
   type ReqPostById = FastifyRequest<{ Querystring: { unmod?: string }, Params: { postId: string } }>;
@@ -87,7 +77,7 @@ export const bindBoardsRoutes = (fastify: FastifyInstance, db: DbConnection) => 
       request.query.unmod !== 'true',
       Number(request.params.postId)
     );
-    reply.send({ item: data });
+    reply.send({ item: serializePost(data) });
   });
 
   type ReqFeed = FastifyRequest<{ Querystring: { unmod?: string, offset?: string, limit?: string, thread_size?: string } }>;
@@ -100,7 +90,7 @@ export const bindBoardsRoutes = (fastify: FastifyInstance, db: DbConnection) => 
     );
     const threadsCount = await db.apis.feed.getCount(request.query.unmod !== 'true');
 
-    reply.send({ items: data, count: threadsCount });
+    reply.send({ items: serializePosts(data), count: threadsCount });
   });
 
   type ReqChatIdentify = FastifyRequest<{ Body: { passphrase?: string } }>;
@@ -168,23 +158,25 @@ export const bindBoardsRoutes = (fastify: FastifyInstance, db: DbConnection) => 
       const displayTitle = state?.alias?.trim() || thread.subject?.trim() || `Thread #${thread.id}`;
       const thumb = firstImageMediaByThread.get(thread.id);
       const lastPreview = lastReplyPreviewByThread.get(thread.id);
+      const serializedThread = serializePost(thread);
+      if (!serializedThread) return null;
       return {
-        ...thread,
+        ...serializedThread,
         unreadCounter,
         isNewThread: state?.lastSeenPostId == null,
         isHidden: Boolean(state?.hidden),
         alias: state?.alias ?? null,
         folderId: state?.folderId ?? null,
         displayTitle,
-        firstPicture: thumb ? chatImageMediaToEpds(thumb) : null,
+        firstPicture: thumb ? serializeMedia(thumb) : null,
         lastReplyTruncatedText: lastPreview?.truncatedText ?? "",
         lastReplyAuthor: lastPreview?.author ?? "",
       };
     }));
 
     reply.send({
-      items: responseItems.filter((item) => !item.isHidden),
-      hiddenItems: responseItems.filter((item) => item.isHidden),
+      items: responseItems.filter((item): item is NonNullable<typeof item> => item != null && !item.isHidden),
+      hiddenItems: responseItems.filter((item): item is NonNullable<typeof item> => item != null && item.isHidden),
       count,
       folders: folders.map((item) => ({ id: item.id, name: item.name, boardId: item.boardId })),
     });
@@ -204,7 +196,7 @@ export const bindBoardsRoutes = (fastify: FastifyInstance, db: DbConnection) => 
     }
     const lastPostId = Number(thread.replies?.length ? thread.replies[thread.replies.length - 1].id : thread.id);
     await db.chat.markThreadRead(profile.id, thread.id, lastPostId);
-    reply.send({ item: thread });
+    reply.send({ item: serializePost(thread) });
   });
 
   type ReqChatMarkRead = FastifyRequest<{ Body: { profileToken?: string }, Params: { postId: string } }>;

@@ -3,6 +3,7 @@ import { MediaType } from "@umechan/shared";
 import { DataSource } from "typeorm";
 import { Media } from "../entities/Media";
 import { Post } from "../entities/Post";
+import { deleteFilesForMedia } from "../../media/storage";
 
 const stickyBlockedFromResponse = (post: ResponsePost) => ({
   isSticky: Boolean(post.is_sticky),
@@ -115,7 +116,14 @@ export const dbModelPosts = (dataSource: DataSource) => ({
     return count > 0;
   },
   deleteById: async (id: number) => {
-    return dataSource.getRepository(Post).delete({ id });
+    await dataSource.transaction(async (manager) => {
+      const mediaRows = await manager.getRepository(Media).find({ where: { postId: id } });
+      for (const row of mediaRows) {
+        await deleteFilesForMedia(row);
+      }
+      await manager.getRepository(Media).delete({ postId: id });
+      await manager.getRepository(Post).delete({ id });
+    });
   },
   updateBoardId: async (postId: number, boardId: number) => {
     await dataSource.getRepository(Post).update({ id: postId }, { boardId });
@@ -215,6 +223,8 @@ export const dbModelPosts = (dataSource: DataSource) => ({
       mediaType: MediaType;
       link: string | null;
       preview: string | null;
+      localPath?: string | null;
+      localPreviewPath?: string | null;
     }>
   ) => {
     if (!posts.length) return;
@@ -273,6 +283,8 @@ export const dbModelPosts = (dataSource: DataSource) => ({
                 mediaType: item.mediaType,
                 urlOrigin: item.link,
                 urlPreview: item.preview,
+                localPath: item.localPath ?? null,
+                localPreviewPath: item.localPreviewPath ?? null,
                 postId: item.postId,
               }))
             )

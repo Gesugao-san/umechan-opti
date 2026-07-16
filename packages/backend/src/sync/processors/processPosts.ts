@@ -3,6 +3,81 @@ import type { ResponsePost } from "../../types/responseThreadsList";
 import { MediaType } from "@umechan/shared";
 import { logger } from "../../utils/logger";
 import { measureTime } from "../../utils/measureTime";
+import type { IncomingMediaItem } from "../../media/syncLocalMedia";
+import { syncLocalMedia } from "../../media/syncLocalMedia";
+
+const collectPostsWithThreadIds = (posts: ResponsePost[]) => {
+  const allPosts: Array<{ post: ResponsePost; threadId: number }> = [];
+
+  for (const post of posts) {
+    const threadId = post.id;
+    allPosts.push({ post, threadId });
+    if (post.replies.length) {
+      for (const reply of post.replies) {
+        allPosts.push({ post: reply, threadId });
+      }
+    }
+  }
+
+  const uniquePosts = Array.from(
+    new Map(allPosts.map(({ post }) => [post.id, post])).values(),
+  );
+  const threadIdByPostId = new Map(
+    allPosts.map(({ post, threadId }) => [post.id, threadId]),
+  );
+
+  return { uniquePosts, threadIdByPostId };
+};
+
+const collectMediaItems = (
+  uniquePosts: ResponsePost[],
+  threadIdByPostId: Map<number, number>,
+): IncomingMediaItem[] => {
+  const mediaItems: IncomingMediaItem[] = [];
+
+  for (const post of uniquePosts) {
+    const threadId = threadIdByPostId.get(post.id);
+    if (threadId === undefined) continue;
+
+    if (post.media?.images?.length) {
+      for (const item of post.media.images) {
+        mediaItems.push({
+          postId: post.id,
+          threadId,
+          mediaType: MediaType.Image,
+          link: item.link,
+          preview: item.preview,
+        });
+      }
+    }
+
+    if (post.media?.youtubes?.length) {
+      for (const item of post.media.youtubes) {
+        mediaItems.push({
+          postId: post.id,
+          threadId,
+          mediaType: MediaType.YouTube,
+          link: item.link,
+          preview: item.preview,
+        });
+      }
+    }
+
+    if (post.media?.videos?.length) {
+      for (const item of post.media.videos) {
+        mediaItems.push({
+          postId: post.id,
+          threadId,
+          mediaType: MediaType.Video,
+          link: item.link,
+          preview: item.preview,
+        });
+      }
+    }
+  }
+
+  return mediaItems;
+};
 
 export const processPosts = async (posts: ResponsePost[], db: DbConnection) => {
   measureTime("db check posts", "start");
@@ -11,21 +86,7 @@ export const processPosts = async (posts: ResponsePost[], db: DbConnection) => {
   let checked = 0;
 
   let mediaChecked = 0;
-  const allPosts: ResponsePost[] = [];
-
-  for (let post of posts) {
-    logger.debug(`Queued post ${post.id}...`);
-    allPosts.push(post);
-
-    if (post.replies.length) {
-      for (let reply of post.replies) {
-        logger.debug(`Queued reply ${reply.id}...`);
-        allPosts.push(reply);
-      }
-    }
-  }
-
-  const uniquePosts = Array.from(new Map(allPosts.map((post) => [post.id, post])).values());
+  const { uniquePosts, threadIdByPostId } = collectPostsWithThreadIds(posts);
   checked = uniquePosts.length;
 
   if (uniquePosts.length) {
@@ -33,59 +94,21 @@ export const processPosts = async (posts: ResponsePost[], db: DbConnection) => {
     updated = uniquePosts.filter((post) => existingIds.has(post.id)).length;
     created = uniquePosts.length - updated;
 
-    const mediaItems: Array<{
-      postId: number;
-      mediaType: MediaType;
-      link: string | null;
-      preview: string | null;
-    }> = [];
+    const mediaItems = collectMediaItems(uniquePosts, threadIdByPostId);
+    mediaChecked = mediaItems.length;
 
-    for (let post of uniquePosts) {
-      if (post.media?.images?.length) {
-        for (let item of post.media.images) {
-          mediaChecked += 1;
-          mediaItems.push({
-            postId: post.id,
-            mediaType: MediaType.Image,
-            link: item.link,
-            preview: item.preview,
-          });
-        }
-      }
+    const syncedMedia = await syncLocalMedia(
+      db,
+      mediaItems,
+      uniquePosts.map((post) => post.id),
+    );
 
-      if (post.media?.youtubes?.length) {
-        for (let item of post.media.youtubes) {
-          mediaChecked += 1;
-          mediaItems.push({
-            postId: post.id,
-            mediaType: MediaType.YouTube,
-            link: item.link,
-            preview: item.preview,
-          });
-        }
-      }
-
-      if (post.media?.videos?.length) {
-        for (let item of post.media.videos) {
-          mediaChecked += 1;
-          mediaItems.push({
-            postId: post.id,
-            mediaType: MediaType.Video,
-            link: item.link,
-            preview: item.preview,
-          });
-        }
-      }
-    }
-
-    await db.posts.syncPostsAndMedia(uniquePosts, mediaItems);
+    await db.posts.syncPostsAndMedia(uniquePosts, syncedMedia);
   }
 
   const postCheckTimeTaken = measureTime("db check posts", "end");
 
-  logger.debug(
-    `"media" table updated, checked=${mediaChecked}`,
-  );
+  logger.debug(`"media" table updated, checked=${mediaChecked}`);
 
   logger.debug(
     `"posts" table updated, checked=${checked}, updated=${updated}, created=${created}, time=${postCheckTimeTaken}ms`,

@@ -3,6 +3,7 @@ import fastifyCors from '@fastify/cors';
 import { createDbConnection } from "../db/connection";
 import { logger } from "../utils/logger";
 import { bindBoardsRoutes } from "./routes/boards";
+import { bindMediaRoutes } from "./routes/media";
 import { bindUtilRoutes } from "./routes/util";
 import type { ApiServerSyncOptions } from "./syncOptions";
 
@@ -25,6 +26,9 @@ export const createApiServer = async (
 
   bindBoardsRoutes(fastify, db);
   logger.info("Board routes binded");
+
+  bindMediaRoutes(fastify);
+  logger.info("Media routes binded");
 
   bindUtilRoutes(fastify, sync);
   logger.info("Util routes binded");
