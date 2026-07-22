@@ -21,7 +21,7 @@ export const enrichNavbar = (boards: EpdsBoard[], unmod: UnmodFlag) => {
   const chansItems: LinkItem[] = [
     { title: 'Шизач', url: 'https://scheoble.xyz/', target: '_blank' },
     { title: 'Писсичан', url: 'https://pissychan.oxore.net/', target: '_blank' },
-    { title: 'Оно живое', url: 'http://u05917ya.bget.ru/', target: '_blank' },
+    { title: 'Оно в стазисе', url: 'https://web.archive.org/web/20231209212928/http://u05917ya.bget.ru/', target: '_blank' },
   ];
 
   const otherItems: LinkItem[] = [
