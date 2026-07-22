@@ -5,16 +5,14 @@
   "scripts": {
     "build": "tsc",
     "start": "tsc && node --env-file=.env dist/index.js",
-    "start-ci": "npm run migrate; node --env-file=.env dist/index.js",
-    "start:cluster": "tsc && node --env-file=.env dist/cluster.js --no-tick-sync --no-kafka-consumer",
-    "start:no-tick-sync": "tsc && node --env-file=.env dist/index.js --no-tick-sync",
+    "start:cluster": "tsc && node --env-file=.env dist/cluster.js",
     "start:no-full-sync": "tsc && node --env-file=.env dist/index.js --no-full-sync",
     "test": "tsc && node --env-file=.env --test dist",
     "migrate": "tsc && node --env-file=.env dist/db/cli.js migrate",
     "migration:generate": "tsc && typeorm-ts-node-commonjs migration:generate -d dist/db/dataSource.js",
     "migration:create": "typeorm-ts-node-commonjs migration:create",
     "build:watch": "tsc --watch",
-    "dev": "pnpm run build && concurrently \"pnpm run build:watch\" \"nodemon --watch dist --watch ../shared/dist -e js,json --delay 2 --exec 'node --env-file=.env dist/index.js --no-tick-sync'\""
+    "dev": "pnpm run build && concurrently \"pnpm run build:watch\" \"nodemon --watch dist --watch ../shared/dist -e js,json --delay 2 --exec 'node --env-file=.env dist/index.js'\""
   },
   "keywords": [],
   "author": "kugichka",
@@ -31,7 +29,6 @@
     "axios": "^1.18.1",
     "better-sqlite3": "^12.11.1",
     "fastify": "^5.10.0",
-    "kafkajs": "^2.2.4",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.31",
     "typescript": "^6.0.3"

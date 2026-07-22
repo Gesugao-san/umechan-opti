@@ -85,7 +85,7 @@ cp packages/backend/.env.example packages/backend/.env
 Ключевые переменные:
 
 - **PISSYKAKA_HOSTNAME**, **PISSYKAKA_API** — адреса внешнего API.
-- **DELAY_AFTER_UPDATE_TICK** — задержка между тиками синка (мс).
+- **FULL_SYNC_INTERVAL_SECONDS** — интервал между периодическими full sync (сек).
 - **FETCH_ENTITIES_FROM_API_BASE_LIMIT**, **FETCH_ENTITIES_MAX_PARALLEL_JOBS** — настройки объёма и параллельности выборки.
 - **DATABASE_URL** — путь к SQLite БД (по умолчанию `file:./dev.db` в `packages/backend/data`).
 - **API_DEFAULT_LISTEN_PORT**, **API_DEFAULT_LISTEN_HOST** — порт/хост HTTP API.
@@ -117,7 +117,7 @@ cp packages/frontend/.env.example packages/frontend/.env.local
 
 Бэкенд реализует:
 
-- **синхронизацию базы** с внешним API pissykaka (полный синк + event‑тики);
+- **синхронизацию базы** с внешним API pissykaka (полный синк + on-demand partial);
 - **REST API** для фронтенда (доски, треды, фид, посты, утилиты);
 - **хранилище** на **SQLite + TypeORM**.
 
@@ -141,13 +141,12 @@ packages/backend/src/
       boards.ts          # REST API для досок/тредов/фида
       util.ts            # /api/v2/util/* (force_sync, la, /metrics)
   sync/
-    createUpdateTick.ts  # createUpdateTick(baseUrl) — оркестратор синка
+    createSyncService.ts # createSyncService(baseUrl) — оркестратор синка
     getFullThreads.ts    # полный список тредов из внешнего API
     index.ts
     processors/
       processBoards.ts   # sync boards -> DB
       processPosts.ts    # sync posts/media -> DB
-      processEvents.ts   # обработка событий (event API)
   sources/
     rest.ts              # createRestSource({ baseUrl }) — REST‑клиент pissykaka
     types.ts             # интерфейс SyncSource

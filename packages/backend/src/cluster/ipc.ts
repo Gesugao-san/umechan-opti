@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import type { Worker } from "node:cluster";
-import type { CreateUpdateTickReturn } from "../sync";
+import type { CreateSyncServiceReturn } from "../sync";
 import { logger } from "../utils/logger";
 import type { SyncLock } from "./syncLock";
 
@@ -64,7 +64,7 @@ export const requestForceSyncFromPrimary = (threadId: number): Promise<void> =>
 export const handleForceSyncMessage = (
   worker: Worker,
   msg: unknown,
-  tickService: CreateUpdateTickReturn,
+  syncService: CreateSyncServiceReturn,
   withSyncLock: SyncLock,
 ) => {
   if (!isForceSyncRequest(msg)) {
@@ -74,7 +74,7 @@ export const handleForceSyncMessage = (
   void withSyncLock(async () => {
     try {
       logger.info(`[Cluster] force_sync thread ${msg.threadId} from worker ${worker.process.pid}`);
-      await tickService.updatePartial(msg.threadId);
+      await syncService.updatePartial(msg.threadId);
       worker.send({
         type: "force_sync_result",
         id: msg.id,

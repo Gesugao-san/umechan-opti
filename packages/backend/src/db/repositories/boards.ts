@@ -1,7 +1,6 @@
 import type { ResponseBoard } from "../../types/responseBoardsList";
 import { DataSource } from "typeorm";
 import { Board } from "../entities/Board";
-import { hashTagToId } from "../../utils/hashTagToId";
 
 export const dbModelBoards = (dataSource: DataSource) => ({
   insert: async (board: ResponseBoard) => {
@@ -36,16 +35,5 @@ export const dbModelBoards = (dataSource: DataSource) => ({
   },
   deleteByTag: async (tag: string) => {
     return dataSource.getRepository(Board).delete({ tag });
-  },
-  upsertFromKafka: async (tag: string, name: string, legal?: boolean) => {
-    const repo = dataSource.getRepository(Board);
-    let board = await repo.findOne({ where: { tag } });
-    const id = hashTagToId(tag);
-    if (board) {
-      board.name = name;
-      board.legal = legal ?? board.legal ?? null;
-      return repo.save(board);
-    }
-    return repo.save(repo.create({ id, tag, name, legal: legal ?? null }));
   },
 });

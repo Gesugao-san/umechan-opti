@@ -2,10 +2,10 @@ import "reflect-metadata";
 import cluster from "node:cluster";
 import os from "node:os";
 import { createDbConnection } from "./db/connection";
-import { runApi, runKafka, runSyncLoop } from "./app/roles";
+import { runApi, runSyncLoop } from "./app/roles";
 import { handleForceSyncMessage, requestForceSyncFromPrimary } from "./cluster/ipc";
 import { createSyncLock } from "./cluster/syncLock";
-import { createUpdateTick } from "./sync";
+import { createSyncService } from "./sync";
 import { pissykakaApi } from "./utils/config";
 import { logger } from "./utils/logger";
 
@@ -18,7 +18,7 @@ if (process.argv.includes("--help")) {
   const help = [
     `${process.env.npm_package_name}@${process.env.npm_package_version}`,
     "",
-    "Cluster mode: N API workers (one per CPU core) + sync/Kafka in primary.",
+    "Cluster mode: N API workers (one per CPU core) + sync in primary.",
     "",
     "Usage:",
     "",
@@ -26,9 +26,7 @@ if (process.argv.includes("--help")) {
     "CLUSTER_WORKERS=2 pnpm run start:cluster   override worker count",
     "",
     "Flags (primary only):",
-    "  --no-tick-sync       disable event sync tick",
     "  --no-full-sync       disable full sync",
-    "  --no-kafka-consumer  disable Kafka consumer",
     "",
     "For configuration look at .env.example file",
   ];
@@ -38,8 +36,6 @@ if (process.argv.includes("--help")) {
 
 const workerCount = Number(process.env.CLUSTER_WORKERS) || os.cpus().length;
 const noFullSync = process.argv.includes("--no-full-sync");
-const noTickSync = process.argv.includes("--no-tick-sync");
-const noKafkaConsumer = process.argv.includes("--no-kafka-consumer");
 
 const forkWorker = () => {
   cluster.fork({ SKIP_MIGRATIONS: "1" });
@@ -85,14 +81,13 @@ const runPrimary = async () => {
   process.on("SIGINT", shutdown);
 
   const withSyncLock = createSyncLock();
-  const tickService = await createUpdateTick(pissykakaApi);
+  const syncService = await createSyncService(pissykakaApi);
 
   cluster.on("message", (worker, msg) => {
-    handleForceSyncMessage(worker, msg, tickService, withSyncLock);
+    handleForceSyncMessage(worker, msg, syncService, withSyncLock);
   });
 
-  await runKafka({ noKafkaConsumer });
-  await runSyncLoop({ noFullSync, noTickSync }, tickService, withSyncLock);
+  await runSyncLoop({ noFullSync }, syncService, withSyncLock);
 };
 
 const runWorker = async () => {

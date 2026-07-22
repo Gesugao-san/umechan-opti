@@ -1,6 +1,6 @@
-import type { CreateUpdateTickReturn } from "../sync";
+import type { CreateSyncServiceReturn } from "../sync";
 
 export type ApiServerSyncOptions = {
-  tickService?: CreateUpdateTickReturn;
+  syncService?: CreateSyncServiceReturn;
   requestForceSync?: (threadId: number) => Promise<void>;
 };

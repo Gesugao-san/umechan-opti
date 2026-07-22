@@ -4,7 +4,7 @@ import { logger } from "../../utils/logger";
 import os from "node:os";
 
 export const bindUtilRoutes = (fastify: FastifyInstance, sync: ApiServerSyncOptions = {}) => {
-  const { tickService, requestForceSync } = sync;
+  const { syncService, requestForceSync } = sync;
   const metrics = {
     requests: 0,
   };
@@ -21,16 +21,14 @@ export const bindUtilRoutes = (fastify: FastifyInstance, sync: ApiServerSyncOpti
           : Number(raw);
     try {
       if (Number.isFinite(threadId) && threadId > 0) {
-        if (tickService) {
-          await tickService.updatePartial(threadId);
+        if (syncService) {
+          await syncService.updatePartial(threadId);
         } else if (requestForceSync) {
           await requestForceSync(threadId);
         } else {
           reply.code(503).send({ ok: false, error: "sync is not available" });
           return;
         }
-      } else {
-        // await tickService?.tick();
       }
       reply.send({ ok: true });
     } catch (err) {

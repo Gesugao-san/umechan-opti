@@ -1,9 +1,8 @@
 import axios from "axios";
 import type { ApiTemplate } from "../types/apiTemplate";
 import type { ResponseBoardsList } from "../types/responseBoardsList";
-import type { ResponsePost, ResponseThreadsList } from "../types/responseThreadsList";
+import type { ResponseThreadsList } from "../types/responseThreadsList";
 import type { ResponseThreadPostsList } from "../types/responseThreadPostsList";
-import type { ResponseEventsList } from "../types/responseEventsList";
 import { fetchEntitiesFromApiBaseLimit, ignoredBoardTags } from "../utils/config";
 import type { SyncSource } from "./types";
 
@@ -43,16 +42,6 @@ export const createRestSource = (params: CreateRestSourceParams): SyncSource => 
     getThreadPostsList: async ({ threadId }) => {
       const response = await request.get<ApiTemplate<ResponseThreadPostsList>>(`/v2/post/${threadId}`);
       return response.data.payload.thread_data;
-    },
-
-    getEvents: async ({ fromTimestamp }) => {
-      const response = await request.get<ApiTemplate<ResponseEventsList>>("/v2/event", {
-        params: {
-          from_timestamp: fromTimestamp,
-          limit: fetchEntitiesFromApiBaseLimit,
-        },
-      });
-      return response.data.payload.events;
     },
   };
 };

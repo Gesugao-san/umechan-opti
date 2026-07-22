@@ -5,8 +5,6 @@ import { dbModelBoards } from "./repositories/boards";
 import { dbModelMedia } from "./repositories/media";
 import { dbModelPosts } from "./repositories/posts";
 import { dbModelSettings } from "./repositories/settings";
-import { dbModelFiles } from "./repositories/files";
-import { dbModelPassports } from "./repositories/passports";
 import { dbModelChat } from "./repositories/chat";
 
 export const createDbConnection = async () => {
@@ -24,8 +22,6 @@ export const createDbConnection = async () => {
     media: dbModelMedia(AppDataSource),
     posts: dbModelPosts(AppDataSource),
     apis: dbModelApis(AppDataSource),
-    files: dbModelFiles(AppDataSource),
-    passports: dbModelPassports(AppDataSource),
     chat: dbModelChat(AppDataSource),
   };
 };

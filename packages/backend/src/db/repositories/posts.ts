@@ -129,66 +129,6 @@ export const dbModelPosts = (dataSource: DataSource) => ({
     await dataSource.getRepository(Post).update({ id: postId }, { boardId });
     return dataSource.getRepository(Post).findOne({ where: { id: postId } });
   },
-  upsertFromKafka: async (
-    id: number,
-    payload: {
-      legacyId?: number;
-      boardId?: number | null;
-      parentId?: number | null;
-      poster?: string;
-      posterVerified?: boolean;
-      subject?: string;
-      message?: string;
-      messageTruncated?: string;
-      timestamp?: number;
-      updatedAt?: number;
-      isSticky?: boolean;
-      isBlocked?: boolean;
-    }
-  ) => {
-    const repo = dataSource.getRepository(Post);
-    const defaults = {
-      poster: "",
-      subject: "",
-      message: "",
-      messageTruncated: "",
-      timestamp: 0,
-      updatedAt: 0,
-    };
-    let post = await repo.findOne({ where: { id } });
-    if (post) {
-      if (payload.legacyId != null) post.legacyId = payload.legacyId;
-      if (payload.boardId !== undefined) post.boardId = payload.boardId;
-      if (payload.parentId !== undefined) post.parentId = payload.parentId;
-      if (payload.poster !== undefined) post.poster = payload.poster;
-      if (payload.posterVerified !== undefined) post.posterVerified = payload.posterVerified;
-      if (payload.subject !== undefined) post.subject = payload.subject;
-      if (payload.message !== undefined) post.message = payload.message;
-      if (payload.messageTruncated !== undefined) post.messageTruncated = payload.messageTruncated;
-      if (payload.timestamp !== undefined) post.timestamp = payload.timestamp;
-      if (payload.updatedAt !== undefined) post.updatedAt = payload.updatedAt;
-      if (payload.isSticky !== undefined) post.isSticky = payload.isSticky;
-      if (payload.isBlocked !== undefined) post.isBlocked = payload.isBlocked;
-      return repo.save(post);
-    }
-    return repo.save(
-      repo.create({
-        id,
-        legacyId: payload.legacyId ?? null,
-        boardId: payload.boardId ?? null,
-        parentId: payload.parentId ?? null,
-        poster: payload.poster ?? defaults.poster,
-        posterVerified: payload.posterVerified ?? false,
-        subject: payload.subject ?? defaults.subject,
-        message: payload.message ?? defaults.message,
-        messageTruncated: payload.messageTruncated ?? defaults.messageTruncated,
-        timestamp: payload.timestamp ?? defaults.timestamp,
-        updatedAt: payload.updatedAt ?? defaults.updatedAt,
-        isSticky: payload.isSticky ?? false,
-        isBlocked: payload.isBlocked ?? false,
-      })
-    );
-  },
   upsertMany: async (posts: ResponsePost[]) => {
     if (!posts.length) return;
     for (const chunk of chunkArray(posts, SQL_UPSERT_CHUNK_SIZE)) {

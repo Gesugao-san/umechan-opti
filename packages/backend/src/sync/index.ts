@@ -1,2 +1,2 @@
-export { createUpdateTick } from "./createUpdateTick";
-export type { CreateUpdateTickReturn } from "./createUpdateTick";
+export { createSyncService } from "./createSyncService";
+export type { CreateSyncServiceReturn } from "./createSyncService";

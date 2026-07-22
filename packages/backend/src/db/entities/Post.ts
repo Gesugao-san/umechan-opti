@@ -36,9 +36,6 @@ export class Post {
   @Column({ nullable: true, type: "bigint", transformer: bigintTransformer })
   boardId!: number | null;
 
-  @Column({ type: "integer", nullable: true })
-  legacyId!: number | null;
-
   @Column({ type: "boolean", default: false })
   isSticky!: boolean;
 

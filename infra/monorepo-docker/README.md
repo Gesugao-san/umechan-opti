@@ -3,7 +3,6 @@
 This directory contains a prod-like Docker setup for the monorepo services:
 - `backend` (`epds`)
 - `frontend` (`umechan-opti`)
-- optional `kafka-ui` profile
 
 ## 1) Quick start
 
@@ -40,13 +39,3 @@ If these variables change, you must rebuild images. `make up-clean` guarantees t
 - `make down` - stop stack
 - `make logs` - follow logs
 - `make ps` - show running services
-
-## 5) Optional Kafka UI profile
-
-Start with profile:
-
-```bash
-docker compose --env-file .env -f docker-compose.yml --profile kafka-ui up --build
-```
-
-Configure Kafka access variables in `.env` (`KAFKA_*` keys).

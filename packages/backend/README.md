@@ -12,7 +12,8 @@
 
 - Периодическая синхронизация БД с внешним API:
   - полный начальный синк;
-  - последующие тики по событиям (`/v2/event`).
+  - периодический full sync по `FULL_SYNC_INTERVAL_SECONDS`;
+  - on-demand partial sync треда (`updatePartial` / `force_sync`).
 - REST API для фронтенда:
   - список досок, тредов, фида;
   - данные по конкретному посту/треду;
@@ -73,7 +74,7 @@ cp .env.example .env
 Основные переменные:
 
 - **PISSYKAKA_HOSTNAME**, **PISSYKAKA_API** — адрес внешнего API.
-- **DELAY_AFTER_UPDATE_TICK** — задержка между тиками синка (мс).
+- **FULL_SYNC_INTERVAL_SECONDS** — интервал между периодическими full sync (сек).
 - **FETCH_ENTITIES_FROM_API_BASE_LIMIT** — базовый лимит выборки сущностей из API.
 - **FETCH_ENTITIES_MAX_PARALLEL_JOBS** — максимальное количество параллельных запросов.
 - **DATABASE_URL** — строка подключения SQLite (по умолчанию `file:./dev.db`).
@@ -88,8 +89,8 @@ cp .env.example .env
 
 - **`pnpm run build`** — компиляция TypeScript в `dist/`.
 - **`pnpm run start`** — сборка и запуск сервера с чтением `.env`.
-- **`pnpm run start:no-tick-sync`** — запуск без тик‑синхронизации (только API).
-- **`pnpm run start:no-full-sync`** — запуск без initial full sync.
+- **`pnpm run start:cluster`** — N API workers + sync в primary.
+- **`pnpm run start:no-full-sync`** — запуск без full sync (только API).
 - **`pnpm run test`** — типизация + `node --test` по `dist`.
 - **`pnpm run migrate`** — запуск миграций (через `db/cli.ts`).
 - **`pnpm run migration:generate`** — генерация миграции на основе текущей схемы.
@@ -100,7 +101,7 @@ cp .env.example .env
 ## Архитектура (вкратце)
 
 - **`sync/`** — синхронизация:
-  - `createUpdateTick` — оркестратор (SyncSource, getFullThreads, processBoards/processPosts, processEvents).
+  - `createSyncService` — оркестратор (SyncSource, getFullThreads, processBoards/processPosts).
 - **`sources/`** — адаптер внешнего API: `createRestSource`, контракт `SyncSource`.
 - **`db/`** — TypeORM: entities, repositories, migrations, `cli.ts`.
 - **`api/`** — Fastify: `routes/boards.ts`, `routes/util.ts`.
