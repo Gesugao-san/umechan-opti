@@ -101,7 +101,7 @@ export const dbModelChat = (dataSource: DataSource) => ({
     const threadIds = threadRows.map((r) => Number(r.threadId));
     const replies = await postRepository.find({
       where: { parentId: In(threadIds) },
-      select: ["id", "parentId"],
+      select: { id: true, parentId: true },
     });
     const replyIdsByThread = new Map<number, number[]>();
     for (const r of replies) {
@@ -117,7 +117,7 @@ export const dbModelChat = (dataSource: DataSource) => ({
 
     const ownRows = await dataSource.getRepository(ProfileOwnPost).find({
       where: { profileId, threadId: In(threadIds) },
-      select: ["postId", "threadId"],
+      select: { postId: true, threadId: true },
     });
     const ownIdsByThread = new Map<number, Set<number>>();
     for (const o of ownRows) {
@@ -183,7 +183,7 @@ export const dbModelChat = (dataSource: DataSource) => ({
     }
     const lastPosts = await postRepository.find({
       where: { id: In(lastPostIds) },
-      select: ["id", "messageTruncated", "poster"],
+      select: { id: true, messageTruncated: true, poster: true },
     });
     const previewByPostId = new Map<number, LastReplyPreview>(
       lastPosts.map((p) => [
